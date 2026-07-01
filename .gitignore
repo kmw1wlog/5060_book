@@ -1,0 +1,7 @@
+node_modules/
+.vercel/
+test-results/
+playwright-report/
+*.png~
+test-*.png
+/ChatGPT Image Jun 10, 2026, 02_59_*.png

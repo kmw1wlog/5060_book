@@ -1,0 +1,1310 @@
+:root {
+  --ink: #102f27;
+  --ink-2: #183d34;
+  --forest: #003f31;
+  --forest-2: #00523e;
+  --bronze: #a8793b;
+  --gold: #d7b46a;
+  --cream: #fbf7ed;
+  --paper: #fffdf7;
+  --sage: #dfe9de;
+  --blue-ink: #183044;
+  --clay: #6b4c36;
+  --line: #d6c9b3;
+  --shadow: 0 16px 40px rgba(33, 26, 16, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 112px;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, rgba(0, 63, 49, 0.035) 1px, transparent 1px) 0 0 / 44px 44px,
+    var(--cream);
+  font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+body.lock-scroll {
+  overflow: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  align-items: center;
+  min-height: 92px;
+  padding: 18px clamp(18px, 4vw, 64px);
+  border-bottom: 1px solid rgba(16, 47, 39, 0.12);
+  background: rgba(255, 253, 247, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--forest);
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  font-size: clamp(30px, 3vw, 46px);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--bronze);
+  border: 2px solid currentColor;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.nav-links {
+  display: flex;
+  justify-content: center;
+  gap: clamp(18px, 2.4vw, 42px);
+  min-width: 0;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.nav-links a {
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.nav-links a:hover,
+.nav-links a:focus {
+  border-color: var(--forest);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  width: min(280px, 20vw);
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.search-box input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.search-box span:last-child {
+  font-size: 26px;
+}
+
+.icon-link,
+.cart-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cart-link {
+  position: relative;
+}
+
+.cart-link b {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--bronze);
+  color: white;
+  font-size: 13px;
+}
+
+.section-anchor {
+  scroll-margin-top: 96px;
+}
+
+.hero {
+  position: relative;
+  min-height: min(660px, calc(100vh - 88px));
+  display: flex;
+  align-items: center;
+  padding: clamp(54px, 8vw, 110px) clamp(24px, 6vw, 100px);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(251, 247, 237, 0.96) 0%, rgba(251, 247, 237, 0.88) 31%, rgba(251, 247, 237, 0.1) 72%),
+    url("./src/ChatGPT Image Jun 10, 2026, 03_00_04 AM (1).png") center right / cover no-repeat;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 88px;
+  background: linear-gradient(0deg, rgba(16, 47, 39, 0.22), transparent);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 100%);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--bronze);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+h1 {
+  color: var(--forest);
+  font-size: clamp(52px, 6vw, 88px);
+  font-weight: 900;
+}
+
+.hero-title-sub {
+  margin: 8px 0 28px;
+  color: var(--forest);
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  font-size: clamp(30px, 3.35vw, 50px);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.hero-title-sub span {
+  display: block;
+}
+
+.hero-copy {
+  max-width: 560px;
+  margin: 0 0 32px;
+  color: #1f1f1a;
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.hero-actions,
+.card-actions,
+.product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 56px;
+  padding: 0 30px;
+  border: 1px solid var(--forest);
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 18px;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--forest), var(--forest-2));
+  color: white;
+}
+
+.btn-ghost {
+  background: rgba(255, 253, 247, 0.84);
+  color: var(--ink);
+}
+
+.btn.small {
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 16px;
+}
+
+.value-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: linear-gradient(135deg, #002f27, #00523e);
+  color: var(--paper);
+}
+
+.value-strip div {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 18px;
+  border-right: 1px solid rgba(215, 180, 106, 0.55);
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  font-size: clamp(18px, 2vw, 26px);
+}
+
+.value-strip div:last-child {
+  border-right: 0;
+}
+
+.value-icon {
+  color: var(--gold);
+  font-size: 34px;
+}
+
+.entry-band,
+.start-section,
+.collections,
+.translation,
+.community,
+.checkout,
+.guide {
+  padding: clamp(56px, 7vw, 96px) clamp(20px, 5vw, 78px);
+}
+
+.section-head,
+.wide-head {
+  width: min(1240px, 100%);
+  margin: 0 auto 32px;
+}
+
+.section-head h2,
+.wide-head h2,
+.guide-copy h2 {
+  color: var(--forest);
+  font-size: clamp(36px, 5vw, 64px);
+}
+
+.wide-head p:last-child,
+.guide-copy p:last-child {
+  max-width: 780px;
+  margin: 16px 0 0;
+  color: #25231f;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+}
+
+.entry-card {
+  display: grid;
+  grid-template-columns: 42% 1fr auto;
+  gap: 22px;
+  align-items: stretch;
+  min-height: 214px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.78);
+}
+
+.entry-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.entry-card div {
+  align-self: center;
+  padding: 22px 0;
+}
+
+.entry-card h3 {
+  color: var(--forest);
+  font-size: clamp(24px, 2.6vw, 34px);
+}
+
+.entry-card p {
+  margin: 18px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.entry-card > span,
+.book-tile a {
+  display: grid;
+  place-items: center;
+  align-self: end;
+  width: 52px;
+  height: 52px;
+  margin: 0 18px 18px 0;
+  border-radius: 999px;
+  background: var(--forest);
+  color: white;
+  font-size: 36px;
+}
+
+.start-section {
+  background:
+    linear-gradient(90deg, rgba(251, 247, 237, 0.97) 0%, rgba(251, 247, 237, 0.93) 62%, rgba(251, 247, 237, 0.72) 100%),
+    url("./src/ChatGPT Image Jun 10, 2026, 03_00_04 AM (10).png") top right / min(54vw, 760px) auto no-repeat;
+}
+
+.question-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+}
+
+.question-card,
+.community-grid article,
+.vote-box,
+.order-panel,
+.summary-panel,
+.guide-form,
+.founder-panel,
+.detail-grid article,
+.promise-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 247, 0.9);
+  box-shadow: 0 8px 24px rgba(44, 35, 20, 0.06);
+}
+
+.question-card {
+  position: relative;
+  min-height: 260px;
+  padding: 34px 26px 28px;
+  text-align: center;
+}
+
+.round-icon {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: radial-gradient(circle, var(--forest) 0 48%, var(--paper) 49%);
+  color: var(--gold);
+  font-size: 36px;
+}
+
+.question-card h3 {
+  color: var(--forest);
+  font-size: 30px;
+}
+
+.question-card p {
+  margin: 14px 0 0;
+  color: #282620;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.question-card b {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: var(--forest);
+  color: white;
+  font-size: 28px;
+}
+
+.collections {
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.72), rgba(232, 238, 225, 0.56));
+}
+
+.set-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: min(1320px, 100%);
+  margin: 0 auto 34px;
+}
+
+.set-card {
+  display: grid;
+  grid-template-columns: 1fr 42%;
+  gap: 22px;
+  min-height: 390px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.set-card img {
+  align-self: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 5px;
+  background: var(--forest);
+  color: white;
+  font-weight: 900;
+}
+
+.set-card h3 {
+  margin-top: 22px;
+  color: var(--forest);
+  font-size: clamp(26px, 3vw, 38px);
+}
+
+.set-card ul {
+  margin: 16px 0;
+  padding-left: 20px;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.price-row strong,
+.product-price {
+  color: var(--forest);
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.price-row span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #ead8b9;
+  color: var(--clay);
+  font-weight: 900;
+}
+
+.single-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+}
+
+.book-tile {
+  display: grid;
+  grid-template-columns: 118px 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.book-tile img {
+  width: 118px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.book-tile h3 {
+  color: var(--ink);
+  font-size: 22px;
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+}
+
+.book-tile p {
+  margin: 4px 0 8px;
+}
+
+.book-tile strong {
+  color: var(--forest);
+  font-size: 28px;
+}
+
+.product {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+  gap: 0;
+  width: min(1320px, calc(100% - 40px));
+  margin: 0 auto;
+  padding-inline: 0;
+}
+
+.product-visual,
+.product-info {
+  min-height: 520px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.product-visual {
+  overflow: hidden;
+  border-radius: 8px 0 0 8px;
+}
+
+.product-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(34px, 5vw, 70px);
+  border-left: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.breadcrumb {
+  color: #6e6a60;
+}
+
+.product-info h2 {
+  color: var(--forest);
+  font-size: clamp(44px, 6vw, 70px);
+}
+
+.author {
+  margin: 10px 0 0;
+  color: var(--ink);
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.product-price {
+  display: block;
+  margin: 24px 0;
+}
+
+.feature-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 0 0 32px;
+}
+
+.feature-row div {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 74px;
+  padding: 10px;
+  border-left: 1px solid var(--line);
+}
+
+.feature-row b {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--forest);
+  border-radius: 5px;
+  flex: 0 0 auto;
+}
+
+.detail-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.detail-grid article {
+  padding: 28px;
+}
+
+.detail-grid h3 {
+  color: var(--forest);
+  font-size: 24px;
+}
+
+.translation-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.translation {
+  background:
+    linear-gradient(90deg, rgba(251, 247, 237, 0.98) 0%, rgba(251, 247, 237, 0.94) 64%, rgba(251, 247, 237, 0.34)),
+    url("./src/ChatGPT Image Jun 10, 2026, 03_00_04 AM (7).png") right bottom / min(42vw, 560px) auto no-repeat;
+}
+
+.process-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  width: min(1240px, 100%);
+  margin: 0 auto 42px;
+}
+
+.process-row div {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 164px;
+  padding: 18px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px 999px 8px 8px;
+  background: rgba(255, 253, 247, 0.84);
+  text-align: center;
+}
+
+.process-row b {
+  color: var(--blue-ink);
+  font-size: 22px;
+}
+
+.process-row span {
+  margin-top: 12px;
+  font-weight: 900;
+}
+
+.translation-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+caption {
+  margin-bottom: 12px;
+  text-align: left;
+  color: var(--ink);
+  font-weight: 900;
+  font-size: 22px;
+}
+
+th {
+  background: var(--forest);
+  color: white;
+}
+
+th,
+td {
+  padding: 18px 14px;
+  border: 1px solid var(--line);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.promise-panel {
+  padding: 28px;
+}
+
+.promise-panel h3 {
+  color: var(--forest);
+  font-size: 28px;
+}
+
+.promise-panel p {
+  padding-left: 28px;
+  font-weight: 800;
+}
+
+.promise-panel p::before {
+  content: "✓";
+  margin-left: -28px;
+  margin-right: 10px;
+  color: var(--forest);
+}
+
+.community {
+  background:
+    linear-gradient(90deg, rgba(251, 247, 237, 0.95) 0%, rgba(251, 247, 237, 0.74) 58%, rgba(251, 247, 237, 0.12)),
+    url("./src/ChatGPT Image Jun 10, 2026, 03_00_04 AM (10).png") top right / cover no-repeat;
+}
+
+.community-hero {
+  display: flex;
+  align-items: center;
+  min-height: 300px;
+  width: min(1240px, 100%);
+  margin: 0 auto 32px;
+}
+
+.community-hero h2 {
+  color: var(--forest);
+  font-size: clamp(42px, 6vw, 74px);
+}
+
+.community-hero p:last-child {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: min(1240px, 100%);
+  margin: 0 auto 28px;
+}
+
+.community-grid article {
+  min-height: 190px;
+  padding: 28px;
+}
+
+.community-grid h3 {
+  color: var(--forest);
+  font-size: 28px;
+}
+
+.vote-box {
+  width: min(500px, 100%);
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.vote-box h3 {
+  color: var(--forest);
+  font-size: 28px;
+}
+
+.vote-box label {
+  display: block;
+  margin: 12px 0;
+  font-size: 18px;
+}
+
+.vote-box button,
+.summary-panel button,
+.guide-form button {
+  width: 100%;
+  min-height: 54px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--forest);
+  color: white;
+  font-weight: 900;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.checkout {
+  background: linear-gradient(180deg, rgba(251, 247, 237, 0.98), rgba(238, 243, 235, 0.78));
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 28px;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+}
+
+.order-panel,
+.summary-panel {
+  padding: 24px;
+}
+
+.order-panel h3,
+.summary-panel h3 {
+  margin: 0 0 18px;
+  color: var(--ink);
+  font-family: Pretendard, "Noto Sans KR", sans-serif;
+  font-size: 24px;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 150px 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.cart-item img {
+  width: 150px;
+  aspect-ratio: 1.45 / 1;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.cart-item span {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--sage);
+  font-weight: 800;
+}
+
+.cart-item b {
+  font-size: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-grid input,
+.guide-form input,
+.guide-form select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+}
+
+.form-grid input:nth-child(n + 3) {
+  grid-column: span 2;
+}
+
+.summary-panel dl {
+  margin: 0 0 24px;
+}
+
+.summary-panel div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+  font-size: 20px;
+}
+
+.summary-panel dt,
+.summary-panel dd {
+  margin: 0;
+}
+
+.summary-panel .total {
+  margin-top: 8px;
+  border-top: 1px dashed var(--line);
+  color: var(--forest);
+  font-weight: 900;
+  font-size: 30px;
+}
+
+.summary-panel button {
+  margin-bottom: 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.summary-panel .btn {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.guide {
+  background:
+    linear-gradient(90deg, rgba(251, 247, 237, 0.97) 0%, rgba(251, 247, 237, 0.9) 52%, rgba(251, 247, 237, 0.42)),
+    url("./src/ChatGPT Image Jun 10, 2026, 03_00_04 AM (1).png") bottom right / min(66vw, 920px) auto no-repeat;
+}
+
+.guide-copy {
+  width: min(1080px, 100%);
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.guide-layout {
+  display: grid;
+  grid-template-columns: 1fr 0.95fr;
+  gap: 30px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.guide-form,
+.founder-panel {
+  padding: 30px;
+}
+
+.guide-form h3,
+.founder-panel h3 {
+  color: var(--forest);
+  font-size: 30px;
+  text-align: center;
+}
+
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin: 22px 0 24px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.benefits span {
+  display: grid;
+  place-items: center;
+  min-height: 86px;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  text-align: center;
+  font-weight: 800;
+}
+
+.benefits span:last-child {
+  border-right: 0;
+}
+
+.guide-form label {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+  font-weight: 800;
+}
+
+.guide-form .agree {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guide-form .agree input {
+  width: 20px;
+  min-height: 20px;
+}
+
+.guide-form button {
+  margin-top: 14px;
+  min-height: 64px;
+  font-size: 22px;
+}
+
+.founder-panel {
+  overflow: hidden;
+}
+
+.founder-panel p {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.founder-panel b {
+  color: var(--ink);
+  font-size: 21px;
+}
+
+.founder-panel img {
+  width: 100%;
+  height: 220px;
+  margin-top: 22px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 96px;
+  padding: 28px clamp(20px, 5vw, 78px);
+  background: var(--forest);
+  color: white;
+}
+
+.site-footer strong {
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  font-size: 30px;
+}
+
+@media (max-width: 1120px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .nav-links {
+    grid-column: 1 / -1;
+    order: 3;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .search-box,
+  .icon-link span:last-child {
+    display: none;
+  }
+
+  .hero {
+    background-position: center right -170px;
+  }
+
+  .entry-grid,
+  .set-grid,
+  .checkout-grid,
+  .guide-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .question-grid,
+  .process-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .single-row,
+  .community-grid,
+  .detail-grid,
+  .translation-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .product {
+    grid-template-columns: 1fr;
+  }
+
+  .product-visual,
+  .product-info {
+    border-radius: 8px;
+  }
+
+  .product-info {
+    border-left: 1px solid var(--line);
+    border-top: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    min-height: 78px;
+    padding: 14px 16px;
+    gap: 14px;
+  }
+
+  .brand {
+    font-size: 28px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .nav-links {
+    gap: 18px;
+    font-size: 16px;
+  }
+
+  .hero {
+    min-height: 620px;
+    padding: 48px 20px;
+    align-items: flex-end;
+    background:
+      linear-gradient(0deg, rgba(251, 247, 237, 0.98) 0%, rgba(251, 247, 237, 0.86) 47%, rgba(251, 247, 237, 0.18) 100%),
+      url("./src/ChatGPT Image Jun 10, 2026, 03_00_04 AM (1).png") top center / auto 380px no-repeat;
+  }
+
+  h1 {
+    font-size: 48px;
+  }
+
+  .hero-title-sub {
+    font-size: 31px;
+  }
+
+  .hero-copy {
+    font-size: 18px;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 54px;
+    padding: 0 18px;
+  }
+
+  .value-strip,
+  .entry-grid,
+  .question-grid,
+  .process-row {
+    grid-template-columns: 1fr;
+  }
+
+  .value-strip div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(215, 180, 106, 0.55);
+  }
+
+  .entry-card {
+    grid-template-columns: 38% 1fr;
+  }
+
+  .entry-card > span {
+    display: none;
+  }
+
+  .set-card {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .book-tile,
+  .cart-item {
+    grid-template-columns: 90px 1fr;
+  }
+
+  .book-tile a,
+  .cart-item b {
+    grid-column: 2;
+  }
+
+  .book-tile img {
+    width: 90px;
+  }
+
+  .cart-item img {
+    width: 90px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .feature-row,
+  .translation-preview,
+  .form-grid,
+  .benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-row div {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .form-grid input:nth-child(n + 3) {
+    grid-column: auto;
+  }
+
+  .benefits span {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .benefits span:last-child {
+    border-bottom: 0;
+  }
+
+  .entry-band,
+  .start-section,
+  .collections,
+  .translation,
+  .community,
+  .checkout,
+  .guide {
+    padding: 46px 16px;
+  }
+
+  .section-head h2,
+  .wide-head h2,
+  .guide-copy h2 {
+    font-size: 36px;
+  }
+
+  th,
+  td {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
+}
