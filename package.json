@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "python3 -m http.server 5173",
+    "data:dashboard": "node scripts/build-dashboard-data.js",
     "test:e2e": "playwright test tests/site.spec.js --reporter=line"
   },
   "devDependencies": {

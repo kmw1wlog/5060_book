@@ -1,6 +1,9 @@
 node_modules/
 .vercel/
 .tools/
+.env
+.env.*
+!.env.example
 test-results/
 playwright-report/
 *.png~
