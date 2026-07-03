@@ -28,6 +28,48 @@ function safeStatus(name, status, detail = {}) {
   };
 }
 
+const ENV_REQUIREMENTS = [
+  { key: "KAKAO_REST_API_KEY", purpose: "Kakao Local REST 주소 검색/좌표 변환", phase: "map-geocoding", usage: "implemented" },
+  { key: "KAKAO_CLIENT_SECRET", purpose: "Kakao OAuth 계열에서만 필요. 지도/Local에는 현재 불필요", phase: "none", usage: "not-required" },
+  { key: "KAKAO_JAVASCRIPT_KEY_DEFAULT", purpose: "Kakao Map SDK 브라우저 키 후보", phase: "map-sdk", usage: "pending" },
+  { key: "NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY", purpose: "Kakao Map SDK 브라우저 키", phase: "map-sdk", usage: "pending" },
+  { key: "VWORLD_API_KEY", purpose: "VWorld 노인복지시설 좌표/속성 수집", phase: "public-data", usage: "implemented" },
+  { key: "VWORLD_DATA_ENDPOINT", purpose: "VWorld Data API endpoint", phase: "public-data", usage: "implemented" },
+  { key: "PUBLIC_DATA_SERVICE_KEY", purpose: "공공데이터포털 표준데이터 호출", phase: "public-data", usage: "implemented" },
+  { key: "SOCIAL_WELFARE_ENDPOINT", purpose: "사회복지시설 XML API endpoint", phase: "public-data", usage: "pending" },
+  { key: "LIFELONG_LECTURE_ENDPOINT", purpose: "전국평생학습강좌 API", phase: "public-data", usage: "implemented" },
+  { key: "LIFELONG_FACILITY_ENDPOINT", purpose: "전국평생교육시설 API", phase: "public-data", usage: "implemented" },
+  { key: "KEDI_LIFELONG_INSTITUTIONS_CSV", purpose: "한국교육개발원 평생교육기관 CSV", phase: "public-data", usage: "implemented" },
+  { key: "SOCIAL_WELFARE_DOCX", purpose: "사회복지시설 API 명세 확인", phase: "public-data", usage: "implemented" },
+  { key: "SENIOR_WELFARE_PDF", purpose: "노인복지시설 파일데이터 원천", phase: "public-data", usage: "pending" },
+  { key: "SENIOR_WELFARE_HWPX", purpose: "노인복지시설 파일데이터 원천", phase: "public-data", usage: "pending" },
+  { key: "SUPABASE_URL", purpose: "Supabase DB 접속 URL", phase: "database", usage: "pending" },
+  { key: "SUPABASE_ANON_KEY", purpose: "브라우저 read/RLS 검증용 anon key", phase: "database", usage: "pending" },
+  { key: "SUPABASE_SERVICE_ROLE_KEY", purpose: "서버/빌드 수집 데이터 upsert", phase: "database", usage: "pending" },
+  { key: "EMAIL_PROVIDER_API_KEY", purpose: "Resend/SendGrid/Mailgun/SES 등 발송 provider", phase: "email", usage: "pending" },
+  { key: "LISTMONK_BASE_URL", purpose: "self-hosted listmonk API base URL", phase: "email", usage: "pending" },
+  { key: "LISTMONK_API_TOKEN", purpose: "listmonk API token", phase: "email", usage: "pending" },
+  { key: "N8N_WEBHOOK_URL", purpose: "이메일 수집/검수/발송 자동화 webhook", phase: "automation", usage: "pending" },
+];
+
+function buildEnvStatus() {
+  return ENV_REQUIREMENTS.map((item) => {
+    const configured = Boolean(process.env[item.key]);
+    let status = configured ? "configured" : "missing";
+    if (item.usage === "not-required") status = configured ? "configured-not-required" : "not-required";
+    if (item.usage === "pending" && configured) status = "configured-unused";
+    if (item.usage === "pending" && !configured) status = "missing-for-future-stage";
+    return {
+      key: item.key,
+      configured,
+      status,
+      usage: item.usage,
+      phase: item.phase,
+      purpose: item.purpose,
+    };
+  });
+}
+
 function fetchJson(url, headers = {}) {
   return new Promise((resolve, reject) => {
     const req = https.request(url, { headers }, (res) => {
@@ -452,6 +494,7 @@ async function main() {
       pipelineCounts,
     },
     apiStatus,
+    envStatus: buildEnvStatus(),
     institutions: normalized,
     contacts,
   };

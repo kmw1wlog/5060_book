@@ -76,6 +76,19 @@ test.describe("map-canvas institution dashboard", () => {
     await expect(page.locator("#collectionQueueCount")).toHaveText("420");
   });
 
+  test("source tab exposes safe environment usage status without secrets", async ({ page }) => {
+    await page.setViewportSize({ width: 1448, height: 900 });
+    await openDashboard(page);
+
+    await page.getByRole("button", { name: "출처" }).click();
+    await expect(page.locator("#envStatusList .env-item")).toHaveCount(21);
+    await expect(page.locator("#envStatusList")).toContainText("NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY");
+    await expect(page.locator("#envStatusList")).toContainText("SUPABASE_URL");
+    await expect(page.locator("#envStatusList")).toContainText("configured-unused");
+    await expect(page.locator("#envStatusList")).toContainText("missing-for-future-stage");
+    await expect(page.locator("#envStatusList")).not.toContainText("539082");
+  });
+
   test("CSV export stays local and includes source columns", async ({ page }) => {
     await page.setViewportSize({ width: 1448, height: 900 });
     await openDashboard(page);

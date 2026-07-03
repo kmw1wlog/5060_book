@@ -1,6 +1,7 @@
 let institutions = [];
 let contacts = [];
 let apiStatus = [];
+let envStatus = [];
 let activeTarget = "all";
 let activeRegion = "all";
 let selectedId = "";
@@ -22,6 +23,7 @@ const suppressedContactCount = qs("#suppressedContactCount");
 const sendableContactCount = qs("#sendableContactCount");
 const apiStatusStrip = qs("#apiStatusStrip");
 const apiStatusList = qs("#apiStatusList");
+const envStatusList = qs("#envStatusList");
 
 const detailName = qs("#detailName");
 const detailCategory = qs("#detailCategory");
@@ -217,6 +219,19 @@ function renderApiStatus() {
   });
   apiStatusStrip.replaceChildren(strip);
   apiStatusList.replaceChildren(list);
+}
+
+function renderEnvStatus() {
+  const fragment = document.createDocumentFragment();
+  envStatus.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "side-item env-item";
+    row.append(createTextElement("strong", item.key));
+    row.append(createBadge(item.status, item.status.includes("missing") ? "status-badge caution" : "status-badge good"));
+    row.append(createTextElement("p", `${item.phase} · ${item.purpose}`));
+    fragment.append(row);
+  });
+  envStatusList.replaceChildren(fragment);
 }
 
 function renderMap() {
@@ -447,10 +462,12 @@ async function boot() {
     institutions = data.institutions || [];
     contacts = data.contacts || [];
     apiStatus = data.apiStatus || [];
+    envStatus = data.envStatus || [];
     selectedId = institutions[0]?.id || "";
     renderRegionSelect();
     updateKpis();
     renderApiStatus();
+    renderEnvStatus();
     if (institutions[0]) updateDetail(institutions[0]);
     renderAll();
     document.documentElement.dataset.dashboardReady = "true";
