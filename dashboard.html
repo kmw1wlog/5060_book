@@ -62,12 +62,14 @@
             <span>실데이터 권역 집계 기반. Kakao/VWorld 좌표 보강 전까지 대표 권역 좌표를 사용합니다.</span>
           </div>
           <div class="map-actions">
+            <span class="map-engine-badge" id="mapEngineStatus">지도 엔진 확인 중</span>
             <button type="button" id="resetMap">전국 보기</button>
             <button type="button" id="exportCsv">CSV 내보내기</button>
-            <button type="button" disabled>실제 지도 SDK 대기</button>
+            <button type="button" disabled>지도 fallback 보유</button>
           </div>
         </div>
         <div class="korea-canvas" role="img" aria-label="한국 전체 국토 위 기관 분포 지도">
+          <div id="kakaoMapLayer" class="kakao-map-layer" aria-label="Kakao 실지도"></div>
           <div class="korea-land" aria-hidden="true"></div>
           <div id="mapPins"></div>
         </div>
@@ -187,6 +189,7 @@
       <span id="pendingInstitutionCount">0</span>
     </section>
 
+    <script src="./data/dashboard-config.js"></script>
     <script src="./dashboard.js"></script>
   </body>
 </html>

@@ -5,6 +5,9 @@ const https = require("https");
 const ROOT = path.resolve(__dirname, "..");
 const DATA_DIR = path.join(ROOT, "data");
 const OUTPUT = path.join(DATA_DIR, "dashboard-data.json");
+const CONFIG_OUTPUT = path.join(DATA_DIR, "dashboard-config.js");
+const GEOCODE_CACHE = path.join(DATA_DIR, "geocode-cache.json");
+const DEPLOYED_DOMAIN = "https://5060book.vercel.app";
 
 function loadEnv() {
   const envPath = path.join(ROOT, ".env");
@@ -30,11 +33,13 @@ function safeStatus(name, status, detail = {}) {
 
 const ENV_REQUIREMENTS = [
   { key: "KAKAO_REST_API_KEY", purpose: "Kakao Local REST 주소 검색/좌표 변환", phase: "map-geocoding", usage: "implemented" },
+  { key: "KAKAO_GEOCODE_LIMIT", purpose: "Kakao 좌표 보강 최대 호출 수 제한. 없으면 기본값 420", phase: "map-geocoding", usage: "not-required" },
   { key: "KAKAO_CLIENT_SECRET", purpose: "Kakao OAuth 계열에서만 필요. 지도/Local에는 현재 불필요", phase: "none", usage: "not-required" },
   { key: "KAKAO_JAVASCRIPT_KEY_DEFAULT", purpose: "Kakao Map SDK 브라우저 키 후보", phase: "map-sdk", usage: "pending" },
-  { key: "NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY", purpose: "Kakao Map SDK 브라우저 키", phase: "map-sdk", usage: "pending" },
+  { key: "NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY", purpose: "Kakao Map SDK 브라우저 키", phase: "map-sdk", usage: "implemented" },
   { key: "VWORLD_API_KEY", purpose: "VWorld 노인복지시설 좌표/속성 수집", phase: "public-data", usage: "implemented" },
   { key: "VWORLD_DATA_ENDPOINT", purpose: "VWorld Data API endpoint", phase: "public-data", usage: "implemented" },
+  { key: "VWORLD_DOMAIN", purpose: "VWorld 인증용 배포 도메인 파라미터", phase: "public-data", usage: "implemented" },
   { key: "PUBLIC_DATA_SERVICE_KEY", purpose: "공공데이터포털 표준데이터 호출", phase: "public-data", usage: "implemented" },
   { key: "SOCIAL_WELFARE_ENDPOINT", purpose: "사회복지시설 XML API endpoint", phase: "public-data", usage: "pending" },
   { key: "LIFELONG_LECTURE_ENDPOINT", purpose: "전국평생학습강좌 API", phase: "public-data", usage: "implemented" },
@@ -46,6 +51,8 @@ const ENV_REQUIREMENTS = [
   { key: "SUPABASE_URL", purpose: "Supabase DB 접속 URL", phase: "database", usage: "pending" },
   { key: "SUPABASE_ANON_KEY", purpose: "브라우저 read/RLS 검증용 anon key", phase: "database", usage: "pending" },
   { key: "SUPABASE_SERVICE_ROLE_KEY", purpose: "서버/빌드 수집 데이터 upsert", phase: "database", usage: "pending" },
+  { key: "SUPABASE_ACCESS_TOKEN", purpose: "Supabase Management API 프로젝트 생성/키 조회용 PAT", phase: "database", usage: "implemented" },
+  { key: "SUPABASE_ORG_ID", purpose: "Supabase 프로젝트 생성 대상 조직 ID", phase: "database", usage: "pending" },
   { key: "EMAIL_PROVIDER_API_KEY", purpose: "Resend/SendGrid/Mailgun/SES 등 발송 provider", phase: "email", usage: "pending" },
   { key: "LISTMONK_BASE_URL", purpose: "self-hosted listmonk API base URL", phase: "email", usage: "pending" },
   { key: "LISTMONK_API_TOKEN", purpose: "listmonk API token", phase: "email", usage: "pending" },
@@ -97,6 +104,19 @@ function fetchJson(url, headers = {}) {
     req.on("error", reject);
     req.end();
   });
+}
+
+function fetchJsonFromUrl(url, headers = {}) {
+  return fetchJson(url, headers);
+}
+
+function loadJsonFile(filePath, fallback) {
+  if (!fs.existsSync(filePath)) return fallback;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch {
+    return fallback;
+  }
 }
 
 function csvParse(text) {
@@ -189,6 +209,13 @@ function getCenter(sido, seed) {
   return [Number((lat + offset).toFixed(5)), Number((lng - offset).toFixed(5))];
 }
 
+function getRawLatLng(raw, sido, index) {
+  const lat = Number(raw.lat || raw.y || raw.latitude || raw["위도"]);
+  const lng = Number(raw.lng || raw.x || raw.longitude || raw["경도"]);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return [Number(lat.toFixed(7)), Number(lng.toFixed(7))];
+  return getCenter(sido, index);
+}
+
 function scoreInstitution(item) {
   const text = `${item.name} ${item.category} ${item.subCategory} ${item.programFit}`.toLowerCase();
   let age = 55;
@@ -250,7 +277,7 @@ function normalizeInstitution(raw, index, source) {
       : /복지|노인|경로|시니어/.test(targetText)
         ? "senior"
         : "lifelong";
-  const [lat, lng] = getCenter(sido, index);
+  const [lat, lng] = getRawLatLng(raw, sido, index);
   const base = {
     id: `${source.id}-${index}-${Buffer.from(name).toString("hex").slice(0, 8)}`,
     name,
@@ -269,6 +296,7 @@ function normalizeInstitution(raw, index, source) {
     sourceLicenseType: source.license,
     sourceCollectedAt: new Date().toISOString(),
     dataConfidence: source.confidence,
+    coordinateSource: raw.coordinateSource || (Number.isFinite(Number(raw.lat)) && Number.isFinite(Number(raw.lng)) ? source.confidence : "region-center"),
     reviewStatus: "검수 대기",
     notes: raw.notes || "",
     programFit: raw.programFit || (raw.lctreNm ? "평생학습강좌" : "평생교육"),
@@ -330,6 +358,108 @@ async function fetchPublicData(endpoint, serviceKey, rows = 120) {
   };
 }
 
+async function fetchVWorldFacilities() {
+  const url = new URL(process.env.VWORLD_DATA_ENDPOINT || "https://api.vworld.kr/req/data");
+  Object.entries({
+    service: "data",
+    request: "GetFeature",
+    data: "LT_P_MGPRTFB",
+    key: process.env.VWORLD_API_KEY,
+    domain: process.env.VWORLD_DOMAIN || DEPLOYED_DOMAIN,
+    format: "json",
+    errorFormat: "json",
+    size: "1000",
+    page: "1",
+    geometry: "true",
+    attribute: "true",
+    geomFilter: "BOX(124,33,132,39)",
+    crs: "EPSG:4326",
+  }).forEach(([key, value]) => url.searchParams.set(key, value));
+  const data = await fetchJson(url.toString());
+  const response = data.response || {};
+  if (response.status !== "OK") {
+    const code = response.error?.code || "ERROR";
+    const text = response.error?.text || response.error?.message || "VWorld 호출 실패";
+    throw new Error(`${code}: ${text}`);
+  }
+  const features = response.result?.featureCollection?.features || [];
+  const items = features.map((feature) => {
+    const properties = feature.properties || {};
+    const [lng, lat] = feature.geometry?.coordinates || [];
+    const address = properties.fac_n_add || properties.fac_o_add || "";
+    const region = extractRegionFromAddress(address);
+    return {
+      name: properties.fac_nam || "노인복지시설",
+      category: properties.cat_nam || "노인복지시설",
+      subCategory: "VWorld 노인복지시설",
+      targetGroup: "senior",
+      address,
+      sido: region.sido,
+      sigungu: region.sigungu,
+      lat,
+      lng,
+      phone: properties.fac_tel || "",
+      website: "",
+      notes: feature.id || "",
+      programFit: "노인복지시설",
+      coordinateSource: "vworld-point",
+    };
+  });
+  return {
+    total: Number(response.record?.total || items.length),
+    items,
+  };
+}
+
+async function geocodeAddress(address) {
+  const url = new URL("https://dapi.kakao.com/v2/local/search/address.json");
+  url.searchParams.set("query", address);
+  const data = await fetchJson(url.toString(), { Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}` });
+  const first = data.documents?.[0];
+  if (!first) return null;
+  return {
+    lat: Number(first.y),
+    lng: Number(first.x),
+    matchedAddress: first.address_name || first.road_address?.address_name || "",
+  };
+}
+
+async function geocodeInstitutions(items) {
+  const cache = loadJsonFile(GEOCODE_CACHE, {});
+  const limit = Number(process.env.KAKAO_GEOCODE_LIMIT || 420);
+  let attempted = 0;
+  let success = 0;
+  let cached = 0;
+
+  for (const item of items) {
+    if (item.coordinateSource && item.coordinateSource !== "region-center") continue;
+    if (!item.address || attempted >= limit) continue;
+    const key = item.address.trim();
+    if (cache[key]) {
+      item.lat = cache[key].lat;
+      item.lng = cache[key].lng;
+      item.coordinateSource = "kakao-cache";
+      cached += 1;
+      continue;
+    }
+    attempted += 1;
+    try {
+      const result = await geocodeAddress(key);
+      if (!result) continue;
+      cache[key] = result;
+      item.lat = result.lat;
+      item.lng = result.lng;
+      item.coordinateSource = "kakao-rest";
+      success += 1;
+    } catch {
+      break;
+    }
+  }
+
+  fs.writeFileSync(GEOCODE_CACHE, `${JSON.stringify(cache, null, 2)}\n`, "utf8");
+  return { attempted, success, cached, totalCached: Object.keys(cache).length };
+}
+
 async function probeKakao() {
   try {
     const url = new URL("https://dapi.kakao.com/v2/local/search/address.json");
@@ -350,37 +480,39 @@ async function probeKakao() {
 
 async function probeVWorld() {
   try {
-    const url = new URL(process.env.VWORLD_DATA_ENDPOINT || "https://api.vworld.kr/req/data");
-    Object.entries({
-      service: "data",
-      request: "GetFeature",
-      data: "LT_P_MGPRTFB",
-      key: process.env.VWORLD_API_KEY,
-      domain: "http://127.0.0.1:5173",
-      format: "json",
-      size: "2",
-      page: "1",
-      geometry: "true",
-      attribute: "true",
-      geomFilter: "BOX(124,33,132,39)",
-      crs: "EPSG:4326",
-    }).forEach(([key, value]) => url.searchParams.set(key, value));
-    const data = await fetchJson(url.toString());
-    const response = data.response || {};
-    if (response.status !== "OK") {
-      return safeStatus("VWorld 노인복지시설", "failed", {
-        code: response.error?.code || "ERROR",
-        safeMessage: response.error?.code === "INCORRECT_KEY" ? "VWorld 인증키 오류로 노인복지시설 좌표 수집을 건너뜀" : "VWorld 호출 실패",
-        operatorAction: "VWorld 개발키와 등록 도메인을 확인한 뒤 재수집",
-      });
-    }
-    const features = response.result?.featureCollection?.features || [];
-    return safeStatus("VWorld 노인복지시설", "ok", { total: features.length, safeMessage: "노인복지시설 좌표 수집 정상" });
+    const result = await fetchVWorldFacilities();
+    return safeStatus("VWorld 노인복지시설", "ok", { total: result.total, safeMessage: "노인복지시설 좌표 수집 정상" });
   } catch (error) {
     return safeStatus("VWorld 노인복지시설", "failed", {
       code: "ERROR",
       safeMessage: "VWorld 호출 실패",
       operatorAction: "VWorld 개발키와 등록 도메인 확인",
+    });
+  }
+}
+
+async function probeSupabaseManagement() {
+  const token = process.env.SUPABASE_ACCESS_TOKEN || "";
+  if (!token) {
+    return safeStatus("Supabase Management API", "failed", {
+      safeMessage: "SUPABASE_ACCESS_TOKEN 없음",
+      operatorAction: "PAT를 로컬/배포 Secret으로 설정",
+    });
+  }
+  try {
+    const orgs = await fetchJsonFromUrl("https://api.supabase.com/v1/organizations", {
+      Authorization: `Bearer ${token}`,
+    });
+    const orgCount = Array.isArray(orgs) ? orgs.length : 0;
+    return safeStatus("Supabase Management API", orgCount === 1 || process.env.SUPABASE_ORG_ID ? "ok" : "failed", {
+      total: orgCount,
+      safeMessage: orgCount === 1 ? "조직 1개 확인" : `${orgCount}개 조직 확인. 생성 대상 조직 선택 필요`,
+      operatorAction: orgCount > 1 && !process.env.SUPABASE_ORG_ID ? "SUPABASE_ORG_ID를 명시한 뒤 프로젝트 생성 가능" : "",
+    });
+  } catch (error) {
+    return safeStatus("Supabase Management API", "failed", {
+      safeMessage: "Supabase PAT 인증 실패",
+      operatorAction: "SUPABASE_ACCESS_TOKEN 권한과 만료 여부 확인",
     });
   }
 }
@@ -453,8 +585,33 @@ async function main() {
       safeMessage: fs.existsSync(process.env.SOCIAL_WELFARE_DOCX || "") ? "명세 문서 확인됨. 서비스별 operation 매핑 필요" : "명세 문서 없음",
     }),
   );
+
+  try {
+    const vworldFacilities = await fetchVWorldFacilities();
+    apiStatus.push(safeStatus("VWorld 노인복지시설 실데이터", "ok", { total: vworldFacilities.total, safeMessage: "노인복지시설 실좌표 수집" }));
+    vworldFacilities.items.forEach((item, index) => {
+      institutions.push(
+        normalizeInstitution(item, index, {
+          id: "vworld-senior",
+          name: "VWorld_노인복지시설",
+          url: "https://api.vworld.kr/req/data",
+          license: "브이월드 오픈API 이용조건 확인",
+          confidence: "api-coordinate",
+        }),
+      );
+    });
+  } catch (error) {
+    apiStatus.push(
+      safeStatus("VWorld 노인복지시설 실데이터", "failed", {
+        safeMessage: "VWorld 노인복지시설 수집 실패",
+        operatorAction: "domain=https://5060book.vercel.app 포함 여부와 개발키 상태 확인",
+      }),
+    );
+  }
+
   apiStatus.push(await probeKakao());
   apiStatus.push(await probeVWorld());
+  apiStatus.push(await probeSupabaseManagement());
 
   const byKey = new Map();
   institutions.forEach((item) => {
@@ -466,7 +623,17 @@ async function main() {
     const existing = byKey.get(key);
     if (item.priorityScore > existing.priorityScore) byKey.set(key, { ...item, ...makeLeadFields(item) });
   });
-  const normalized = balancedSample([...byKey.values()], 420);
+  const deduped = [...byKey.values()];
+  const vworldSenior = deduped.filter((item) => item.sourceDataset === "VWorld_노인복지시설");
+  const nonVworld = deduped.filter((item) => item.sourceDataset !== "VWorld_노인복지시설");
+  const normalized = [...vworldSenior, ...balancedSample(nonVworld, 420)].sort((a, b) => b.priorityScore - a.priorityScore);
+  const geocodeStatus = await geocodeInstitutions(normalized);
+  apiStatus.push(
+    safeStatus("Kakao REST 좌표 보강", "ok", {
+      total: geocodeStatus.success + geocodeStatus.cached,
+      safeMessage: `좌표 보강 ${geocodeStatus.success}건, 캐시 ${geocodeStatus.cached}건`,
+    }),
+  );
   const contacts = normalized.map(createContactCandidate);
 
   const regionCounts = normalized.reduce((acc, item) => {
@@ -492,6 +659,11 @@ async function main() {
       regionCounts,
       targetCounts,
       pipelineCounts,
+      coordinateCounts: normalized.reduce((acc, item) => {
+        const key = item.coordinateSource || "unknown";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {}),
     },
     apiStatus,
     envStatus: buildEnvStatus(),
@@ -500,6 +672,19 @@ async function main() {
   };
 
   fs.writeFileSync(OUTPUT, `${JSON.stringify(dashboard, null, 2)}\n`, "utf8");
+  fs.writeFileSync(
+    CONFIG_OUTPUT,
+    `window.DASHBOARD_CONFIG = ${JSON.stringify(
+      {
+        kakaoJavaScriptKey: process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY || "",
+        vworldDomain: process.env.VWORLD_DOMAIN || DEPLOYED_DOMAIN,
+        deployedDomain: DEPLOYED_DOMAIN,
+      },
+      null,
+      2,
+    )};\n`,
+    "utf8",
+  );
   console.log(`dashboard-data generated: ${normalized.length} institutions, ${contacts.length} contact candidates`);
   console.log(apiStatus.map((item) => `${item.name}:${item.status}`).join(" | "));
 }
