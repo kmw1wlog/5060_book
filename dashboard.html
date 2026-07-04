@@ -93,6 +93,34 @@
             <tbody id="institutionRows"></tbody>
           </table>
         </div>
+        <section id="listReviewPanel" class="list-review-panel" aria-label="기관 이메일 검수 목록">
+          <div class="list-review-head">
+            <div>
+              <p class="eyebrow">목록·검수</p>
+              <h2>이메일 수집과 영업 상태를 표로 검수합니다</h2>
+            </div>
+            <div class="list-review-actions">
+              <span id="reviewResultCount">0개 표시</span>
+              <button type="button" id="reviewExportCsv">검수 목록 CSV</button>
+            </div>
+          </div>
+          <div class="review-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>기관</th>
+                  <th>유형</th>
+                  <th>지역</th>
+                  <th>연락처</th>
+                  <th>이메일 상태</th>
+                  <th>영업</th>
+                  <th>다음 액션</th>
+                </tr>
+              </thead>
+              <tbody id="reviewRows"></tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
       <aside class="map-right-rail" aria-label="기관 상세와 이메일 목록">

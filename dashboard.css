@@ -1054,8 +1054,16 @@ body.map-dashboard {
   display: grid;
   align-content: start;
   gap: 12px;
-  overflow-y: auto;
+  overflow: hidden;
   padding-right: 2px;
+}
+
+.map-left-rail {
+  overflow-y: auto;
+}
+
+.map-right-rail {
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .rail-panel,
@@ -1376,6 +1384,34 @@ body.map-dashboard {
   display: grid;
 }
 
+.list-review-panel {
+  display: none;
+  min-height: 0;
+  overflow: hidden;
+  padding: 14px;
+  border-top: 1px solid rgba(16, 47, 39, 0.12);
+  background: rgba(255, 253, 247, 0.78);
+}
+
+.map-canvas-panel[data-view-mode="list"] {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.map-canvas-panel[data-view-mode="list"] .korea-canvas,
+.map-canvas-panel[data-view-mode="list"] .map-table-strip,
+.map-canvas-panel[data-view-mode="list"] .region-summary-panel {
+  display: none;
+}
+
+.map-canvas-panel[data-view-mode="list"] .list-review-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.map-canvas-panel[data-view-mode="region"] .list-review-panel {
+  display: none;
+}
+
 .region-summary-hero,
 .region-card {
   min-width: 0;
@@ -1477,6 +1513,73 @@ body.map-dashboard {
   cursor: pointer;
 }
 
+.list-review-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.list-review-head h2 {
+  font-size: 28px;
+}
+
+.list-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.list-review-actions span {
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(0, 63, 49, 0.08);
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.list-review-actions button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--forest);
+  border-radius: 10px;
+  background: var(--forest);
+  color: var(--paper);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.review-table-wrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid rgba(16, 47, 39, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 253, 247, 0.88);
+}
+
+.review-table-wrap table {
+  min-width: 980px;
+  font-size: 13px;
+}
+
+.review-table-wrap th,
+.review-table-wrap td {
+  padding: 10px;
+}
+
+.review-table-wrap td p {
+  margin: 4px 0 0;
+  color: rgba(16, 47, 39, 0.68);
+  font-size: 12px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
 .map-table-strip table {
   min-width: 640px;
   font-size: 14px;
@@ -1489,6 +1592,7 @@ body.map-dashboard {
 
 .right-tabs {
   min-height: 0;
+  overflow: auto;
 }
 
 .map-right-rail .tab-panel h2 {
@@ -1671,5 +1775,11 @@ body.map-dashboard {
 
   .region-summary-hero {
     grid-column: auto;
+  }
+
+  .list-review-head,
+  .list-review-actions {
+    display: grid;
+    justify-content: stretch;
   }
 }

@@ -23,6 +23,10 @@ const kakaoMapLayer = qs("#kakaoMapLayer");
 const mapCanvasPanel = qs(".map-canvas-panel");
 const modeTabs = qs(".mode-tabs");
 const regionSummaryPanel = qs("#regionSummaryPanel");
+const listReviewPanel = qs("#listReviewPanel");
+const reviewRows = qs("#reviewRows");
+const reviewResultCount = qs("#reviewResultCount");
+const reviewExportCsv = qs("#reviewExportCsv");
 const mapResultLabel = qs("#mapResultLabel");
 const mapEngineStatus = qs("#mapEngineStatus");
 const totalInstitutionCount = qs("#totalInstitutionCount");
@@ -112,6 +116,18 @@ function isSuppressedContact(contact) {
   return contact.optOut || contact.bounced || contact.isPersonalEmailSuspected || contact.reviewStatus === "제외";
 }
 
+function getInstitutionContacts(institutionId) {
+  return contacts.filter((contact) => contact.institutionId === institutionId);
+}
+
+function getPrimaryContact(institutionId) {
+  return getInstitutionContacts(institutionId)[0] || null;
+}
+
+function institutionHasEmail(institutionId) {
+  return getInstitutionContacts(institutionId).some((contact) => Boolean(contact.email));
+}
+
 function matchesCampaignSegment(contact, segment) {
   if (segment === "all") return true;
   const institution = institutions.find((item) => item.id === contact.institutionId);
@@ -160,6 +176,7 @@ function selectInstitution(id, tab = null) {
   selectedId = institution.id;
   updateDetail(institution);
   renderRows();
+  renderReviewRows();
   renderGlobalEmailList();
   if (tab) activateTab(tab);
 }
@@ -293,8 +310,7 @@ function getRegionSummaryItems() {
     item[institution.targetGroup] = (item[institution.targetGroup] || 0) + 1;
     item.highPriority += Number(institution.priorityScore) >= 80 ? 1 : 0;
     item.scoreSum += Number(institution.priorityScore || 0);
-    const contact = contacts.find((entry) => entry.institutionId === institution.id);
-    if (!contact?.email) item.missingEmail += 1;
+    if (!institutionHasEmail(institution.id)) item.missingEmail += 1;
     return acc;
   }, {});
   return Object.values(grouped).sort((a, b) => b.total - a.total || a.region.localeCompare(b.region, "ko"));
@@ -345,6 +361,68 @@ function renderRegionSummary() {
   regionSummaryPanel.replaceChildren(fragment);
 }
 
+function getEmailStatusLabel(institutionId) {
+  const related = getInstitutionContacts(institutionId);
+  if (related.some((contact) => isSendableContact(contact))) return "발송 가능";
+  if (related.some((contact) => contact.email)) return "검수 필요";
+  if (related.some(isSuppressedContact)) return "제외/반송";
+  return "수집 필요";
+}
+
+function renderReviewRows() {
+  const visible = filteredInstitutions();
+  reviewResultCount.textContent = `${visible.length.toLocaleString("ko-KR")}개 표시`;
+  const fragment = document.createDocumentFragment();
+
+  if (visible.length === 0) {
+    const row = document.createElement("tr");
+    row.className = "empty-row";
+    const cell = createTextElement("td", "조건에 맞는 검수 대상이 없습니다.");
+    cell.colSpan = 7;
+    row.append(cell);
+    reviewRows.replaceChildren(row);
+    return;
+  }
+
+  visible.slice(0, 260).forEach((institution) => {
+    const contact = getPrimaryContact(institution.id);
+    const row = document.createElement("tr");
+    if (institution.id === selectedId) row.classList.add("is-selected");
+
+    const nameCell = document.createElement("td");
+    const button = document.createElement("button");
+    button.className = "institution-button";
+    button.type = "button";
+    button.dataset.id = institution.id;
+    button.textContent = institution.name;
+    nameCell.append(button);
+
+    const contactCell = document.createElement("td");
+    contactCell.append(createTextElement("strong", contact?.phone || institution.phone || "전화 확인 필요"));
+    contactCell.append(createTextElement("p", contact?.website || institution.website || "홈페이지 확인 필요"));
+
+    const emailCell = document.createElement("td");
+    emailCell.append(createBadge(getEmailStatusLabel(institution.id), institutionHasEmail(institution.id) ? "status-badge good" : "status-badge caution"));
+    emailCell.append(createTextElement("p", contact?.email || "대표 이메일 수집 필요"));
+
+    const stageCell = document.createElement("td");
+    stageCell.append(createBadge(institution.leadStage, getBadgeClass(institution.leadStage)));
+
+    row.append(
+      nameCell,
+      createTextElement("td", TARGET_LABELS[institution.targetGroup] || institution.targetGroup),
+      createTextElement("td", `${institution.sido} ${institution.sigungu}`.trim()),
+      contactCell,
+      emailCell,
+      stageCell,
+      createTextElement("td", institution.followupReason || institution.lastAction || "담당자 확인"),
+    );
+    fragment.append(row);
+  });
+
+  reviewRows.replaceChildren(fragment);
+}
+
 function setViewMode(mode, options = {}) {
   activeViewMode = mode;
   mapCanvasPanel.dataset.viewMode = mode;
@@ -352,6 +430,7 @@ function setViewMode(mode, options = {}) {
     button.classList.toggle("is-active", button.dataset.viewMode === mode);
   });
   if (mode === "region") renderRegionSummary();
+  if (mode === "list") renderReviewRows();
   if (mode === "map" && options.fit === true) renderMap({ fit: true });
 }
 
@@ -491,7 +570,7 @@ function renderGlobalEmailList() {
   const fragment = document.createDocumentFragment();
   contacts
     .filter((contact) => visibleIds.has(contact.institutionId))
-    .slice(0, 180)
+    .slice(0, 40)
     .forEach((contact) => {
       const institution = institutions.find((item) => item.id === contact.institutionId);
       const item = document.createElement("button");
@@ -584,6 +663,7 @@ function renderAll(options = {}) {
   renderMap(options);
   renderRegionSummary();
   renderRows();
+  renderReviewRows();
   renderGlobalEmailList();
   renderCampaign();
 }
@@ -628,6 +708,10 @@ function bindEvents() {
     const button = event.target.closest("[data-id]");
     if (button) selectInstitution(button.dataset.id, "summary");
   });
+  reviewRows.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-id]");
+    if (button) selectInstitution(button.dataset.id, "summary");
+  });
   globalEmailList.addEventListener("click", (event) => {
     const button = event.target.closest("[data-id]");
     if (button) selectInstitution(button.dataset.id, "contacts");
@@ -651,6 +735,7 @@ function bindEvents() {
   };
   downloadCsv.addEventListener("click", startDownload);
   exportCsv.addEventListener("click", startDownload);
+  reviewExportCsv.addEventListener("click", startDownload);
   csvInput.addEventListener("change", () => {
     const file = csvInput.files?.[0];
     csvStatus.textContent = file ? `${file.name} 선택됨. 서버 저장 없이 사람이 먼저 검수합니다.` : "선택된 파일 없음";

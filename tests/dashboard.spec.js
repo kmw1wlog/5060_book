@@ -104,13 +104,50 @@ test.describe("map-canvas institution dashboard", () => {
     await expect(page.locator("#orderRevenue")).toContainText("원");
   });
 
+  test("list review mode owns the long contact workflow", async ({ page }) => {
+    await page.setViewportSize({ width: 1448, height: 900 });
+    await openDashboard(page);
+
+    await page.getByRole("button", { name: "목록·검수" }).click();
+    await expect(page.locator(".map-canvas-panel")).toHaveAttribute("data-view-mode", "list");
+    await expect(page.locator("#listReviewPanel")).toBeVisible();
+    await expect(page.locator(".korea-canvas")).not.toBeVisible();
+    await expect(page.locator("#reviewResultCount")).toContainText(`${totalInstitutions.toLocaleString("ko-KR")}개 표시`);
+    await expect(page.locator("#reviewRows tr")).toHaveCount(260);
+    await expect(page.locator("#reviewRows")).toContainText("수집 필요");
+
+    await page.locator("#reviewRows button").first().click();
+    await expect(page.locator("#detailName")).not.toHaveText("데이터 로딩 중");
+    await expect(page.locator("#reviewRows tr.is-selected")).toHaveCount(1);
+  });
+
+  test("right rail remains bounded while automation stays visible", async ({ page }) => {
+    await page.setViewportSize({ width: 1448, height: 900 });
+    await openDashboard(page);
+
+    await expect(page.locator("#globalEmailList .side-item")).toHaveCount(40);
+    const boxes = await page.evaluate(() => {
+      const tabs = document.querySelector(".right-tabs").getBoundingClientRect();
+      const automation = document.querySelector(".automation-panel").getBoundingClientRect();
+      const rail = document.querySelector(".map-right-rail").getBoundingClientRect();
+      return {
+        tabsBottom: tabs.bottom,
+        automationTop: automation.top,
+        railBottom: rail.bottom,
+        automationBottom: automation.bottom,
+      };
+    });
+    expect(boxes.tabsBottom).toBeLessThanOrEqual(boxes.automationTop + 1);
+    expect(boxes.automationBottom).toBeLessThanOrEqual(boxes.railBottom + 1);
+  });
+
   test("email rail and campaign automation remain visible but locked", async ({ page }) => {
     await page.setViewportSize({ width: 1448, height: 900 });
     await openDashboard(page);
 
     await page.getByRole("button", { name: "이메일", exact: true }).click();
     await expect(page.locator("#globalEmailCount")).toHaveText(`${totalInstitutions.toLocaleString("ko-KR")}개`);
-    await expect(page.locator("#globalEmailList .side-item")).toHaveCount(180);
+    await expect(page.locator("#globalEmailList .side-item")).toHaveCount(40);
     await expect(page.locator("#globalEmailList")).toContainText("대표 이메일 수집 필요");
     await expect(page.getByRole("button", { name: "n8n/listmonk 연결 후 테스트 발송" })).toBeDisabled();
     await expect(page.locator("#automationQueueCount")).toHaveText("0");
