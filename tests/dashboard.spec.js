@@ -39,16 +39,21 @@ test.describe("map-canvas institution dashboard", () => {
 
     await page.waitForFunction(() => document.documentElement.dataset.kakaoMapReady === "true");
     await expect(page.locator("#mapEngineStatus")).toHaveText("Kakao 실지도 연결");
+    await expect(page.locator("html")).toHaveAttribute("data-kakao-cluster-ready", "true");
+    await expect(page.locator("html")).toHaveAttribute("data-kakao-marker-count", String(totalInstitutions));
     await expect(page.locator("#kakaoMapLayer.is-ready")).toBeVisible();
-    await expect(page.locator("#mapPins .map-pin")).toHaveCount(totalInstitutions);
+    await expect(page.locator("#mapPins .map-pin")).toHaveCount(0);
     await expect(page.locator("#mapResultLabel")).toContainText(`전국 전체 ${totalInstitutions.toLocaleString("ko-KR")}개 기관`);
 
+    const mapLevelBeforeFilter = await page.evaluate(() => window.__getDashboardMapLevel?.() ?? null);
     await page.getByRole("button", { name: /교회·신학/ }).click();
-    await expect(page.locator("#mapPins .map-pin.church")).toHaveCount(churchCount);
+    await expect(page.locator("html")).toHaveAttribute("data-kakao-marker-count", String(churchCount));
     await expect(page.locator("#mapResultLabel")).toContainText(`전국 교회·신학 ${churchCount.toLocaleString("ko-KR")}개 기관`);
+    const mapLevelAfterFilter = await page.evaluate(() => window.__getDashboardMapLevel?.() ?? null);
+    expect(mapLevelAfterFilter).toBe(mapLevelBeforeFilter);
 
     await page.getByRole("button", { name: "전국 보기" }).click();
-    await expect(page.locator("#mapPins .map-pin")).toHaveCount(totalInstitutions);
+    await expect(page.locator("html")).toHaveAttribute("data-kakao-marker-count", String(totalInstitutions));
   });
 
   test("region filter, table, and right rail stay synchronized", async ({ page }) => {
@@ -57,14 +62,15 @@ test.describe("map-canvas institution dashboard", () => {
 
     await page.locator("#regionSelect").selectOption("서울");
     await expect(page.locator("#mapResultLabel")).toContainText(/서울 전체 \d+개 기관/);
-    const pinCount = await page.locator("#mapPins .map-pin").count();
-    expect(pinCount).toBeGreaterThan(0);
-    expect(pinCount).toBeLessThan(totalInstitutions);
+    const filteredCount = Number(await page.locator("#resultCount").textContent());
+    expect(filteredCount).toBeGreaterThan(0);
+    expect(filteredCount).toBeLessThan(totalInstitutions);
+    await expect(page.locator("html")).toHaveAttribute("data-kakao-marker-count", String(filteredCount));
 
     await page.locator("#institutionRows button").first().click();
     await expect(page.locator("#detailName")).not.toHaveText("데이터 로딩 중");
     await expect(page.locator("#detailRegion")).toContainText("서울");
-    await expect(page.locator("#globalEmailList .side-item")).toHaveCount(pinCount > 180 ? 180 : pinCount);
+    await expect(page.locator("#globalEmailList .side-item")).toHaveCount(filteredCount > 180 ? 180 : filteredCount);
   });
 
   test("map pin click opens an institution management summary", async ({ page }) => {

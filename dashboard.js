@@ -6,6 +6,7 @@ let activeTarget = "all";
 let activeRegion = "all";
 let selectedId = "";
 let kakaoMap = null;
+let kakaoClusterer = null;
 let kakaoMarkers = [];
 
 const qs = (selector) => document.querySelector(selector);
@@ -14,6 +15,7 @@ const rows = qs("#institutionRows");
 const typeToggles = qs("#typeToggles");
 const regionSelect = qs("#regionSelect");
 const resetMap = qs("#resetMap");
+const fitMap = qs("#fitMap");
 const exportCsv = qs("#exportCsv");
 const mapPins = qs("#mapPins");
 const kakaoMapLayer = qs("#kakaoMapLayer");
@@ -154,7 +156,6 @@ function selectInstitution(id, tab = null) {
   selectedId = institution.id;
   updateDetail(institution);
   renderRows();
-  renderMap();
   renderGlobalEmailList();
   if (tab) activateTab(tab);
 }
@@ -238,13 +239,14 @@ function renderEnvStatus() {
   envStatusList.replaceChildren(fragment);
 }
 
-function renderMap() {
+function renderMap(options = {}) {
   const visible = filteredInstitutions();
   const fragment = document.createDocumentFragment();
   const siblingIndexes = {};
   mapResultLabel.textContent = `${activeRegion === "all" ? "전국" : activeRegion} ${TARGET_LABELS[activeTarget]} ${visible.length.toLocaleString("ko-KR")}개 기관`;
 
-  visible.forEach((institution, index) => {
+  const shouldRenderFallbackPins = !kakaoMap || document.documentElement.dataset.kakaoMapReady === "false";
+  if (shouldRenderFallbackPins) visible.forEach((institution, index) => {
     const key = `${institution.sido}-${institution.targetGroup}`;
     siblingIndexes[key] = siblingIndexes[key] || 0;
     const { x, y } = getPinPosition(institution, siblingIndexes[key]);
@@ -260,37 +262,46 @@ function renderMap() {
     pin.setAttribute("aria-label", pin.title);
     fragment.append(pin);
   });
+  mapPins.classList.toggle("is-fallback-active", shouldRenderFallbackPins);
   mapPins.replaceChildren(fragment);
-  renderKakaoMarkers(visible);
+  renderKakaoMarkers(visible, options);
 }
 
 function clearKakaoMarkers() {
+  if (kakaoClusterer) kakaoClusterer.clear();
   kakaoMarkers.forEach((marker) => marker.setMap(null));
   kakaoMarkers = [];
 }
 
-function renderKakaoMarkers(visible) {
+function renderKakaoMarkers(visible, options = {}) {
   if (!kakaoMap || !window.kakao?.maps) return;
   clearKakaoMarkers();
   const bounds = new window.kakao.maps.LatLngBounds();
   let bounded = 0;
+  const markers = [];
   visible.forEach((institution) => {
     const lat = Number(institution.lat);
     const lng = Number(institution.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
     const position = new window.kakao.maps.LatLng(lat, lng);
     const marker = new window.kakao.maps.Marker({
-      map: kakaoMap,
       position,
       title: institution.name,
     });
     window.kakao.maps.event.addListener(marker, "click", () => selectInstitution(institution.id, "summary"));
-    kakaoMarkers.push(marker);
+    markers.push(marker);
     bounds.extend(position);
     bounded += 1;
   });
-  if (bounded > 1) kakaoMap.setBounds(bounds);
-  if (bounded === 1) kakaoMap.setCenter(kakaoMarkers[0].getPosition());
+  kakaoMarkers = markers;
+  document.documentElement.dataset.kakaoMarkerCount = String(markers.length);
+  if (kakaoClusterer) {
+    kakaoClusterer.addMarkers(markers);
+  } else {
+    markers.forEach((marker) => marker.setMap(kakaoMap));
+  }
+  if (options.fit === true && bounded > 1) kakaoMap.setBounds(bounds);
+  if (options.fit === true && bounded === 1) kakaoMap.setCenter(markers[0].getPosition());
 }
 
 function loadKakaoSdk(appKey) {
@@ -304,7 +315,7 @@ function loadKakaoSdk(appKey) {
       return;
     }
     const script = document.createElement("script");
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(appKey)}&autoload=false&libraries=services`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(appKey)}&autoload=false&libraries=services,clusterer`;
     script.onload = () => {
       window.kakao.maps.load(resolve);
     };
@@ -322,11 +333,24 @@ async function initKakaoMap() {
       center: new window.kakao.maps.LatLng(36.5, 127.8),
       level: 13,
     });
+    window.__getDashboardMapLevel = () => kakaoMap?.getLevel?.() ?? null;
+    if (window.kakao.maps.MarkerClusterer) {
+      kakaoClusterer = new window.kakao.maps.MarkerClusterer({
+        map: kakaoMap,
+        averageCenter: true,
+        minLevel: 8,
+        gridSize: 72,
+        disableClickZoom: false,
+      });
+      document.documentElement.dataset.kakaoClusterReady = "true";
+    } else {
+      document.documentElement.dataset.kakaoClusterReady = "false";
+    }
     document.documentElement.dataset.kakaoMapReady = "true";
     mapEngineStatus.textContent = "Kakao 실지도 연결";
     mapEngineStatus.className = "map-engine-badge good";
     kakaoMapLayer.classList.add("is-ready");
-    renderKakaoMarkers(filteredInstitutions());
+    renderMap({ fit: true });
   } catch (error) {
     document.documentElement.dataset.kakaoMapReady = "false";
     mapEngineStatus.textContent = "지도 fallback 사용";
@@ -467,9 +491,9 @@ function buildInstitutionCsv(items) {
   return [columns, ...dataRows].map((row) => row.map(escapeCsvCell).join(",")).join("\n");
 }
 
-function renderAll() {
+function renderAll(options = {}) {
   renderTypeToggles();
-  renderMap();
+  renderMap(options);
   renderRows();
   renderGlobalEmailList();
   renderCampaign();
@@ -490,8 +514,9 @@ function bindEvents() {
     activeTarget = "all";
     activeRegion = "all";
     regionSelect.value = "all";
-    renderAll();
+    renderAll({ fit: true });
   });
+  fitMap.addEventListener("click", () => renderMap({ fit: true }));
   mapPins.addEventListener("click", (event) => {
     const button = event.target.closest("[data-id]");
     if (button) selectInstitution(button.dataset.id, "summary");

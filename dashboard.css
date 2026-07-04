@@ -1245,9 +1245,8 @@ body.map-dashboard {
   opacity: 0;
 }
 
-.kakao-map-layer.is-ready ~ #mapPins {
-  pointer-events: none;
-  opacity: 0.18;
+.kakao-map-layer.is-ready ~ #mapPins:not(.is-fallback-active) {
+  display: none;
 }
 
 .korea-land {
