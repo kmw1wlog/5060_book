@@ -1,0 +1,82 @@
+[
+  {
+    "slug": "current-dashboard",
+    "url": "https://5060book.vercel.app/dashboard.html",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/current-dashboard.png",
+    "ok": true,
+    "title": "거장문고 기관 발굴 지도 대시보드",
+    "h1": "5060+교회·시니어·도서관 타겟을 지도에서 관리합니다"
+  },
+  {
+    "slug": "baymard-split-view",
+    "url": "https://baymard.com/blog/accommodations-split-view",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/baymard-split-view.png",
+    "ok": true,
+    "title": "The Optimal Layout for Hotel & Property Rental Search Results & 3 Pitfalls to Avoid – Baymard",
+    "h1": "The Optimal Layout for Hotel & Property Rental Search Results & 3 Pitfalls to Avoidself.__wrap_n!=1&&self.__wrap_b(\"_R_1"
+  },
+  {
+    "slug": "mapbox-store-locator",
+    "url": "https://docs.mapbox.com/help/tutorials/building-a-store-locator-react/",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/mapbox-store-locator.png",
+    "ok": true,
+    "title": "Build a store locator with React & Mapbox GL JS | Help | Mapbox",
+    "h1": "Build a store locator with React & Mapbox GL JS"
+  },
+  {
+    "slug": "kakao-clusterer",
+    "url": "https://apis.map.kakao.com/web/sample/basicClusterer/",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/kakao-clusterer.png",
+    "ok": true,
+    "title": "마커 클러스터러 사용하기 - Kakao 지도 Web API",
+    "h1": "KakaoMaps API"
+  },
+  {
+    "slug": "open-user-map-list",
+    "url": "https://www.open-user-map.com/list-view/",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/open-user-map-list.png",
+    "ok": true,
+    "title": "Demo: List View - Open User Map",
+    "h1": "Demo: List View"
+  },
+  {
+    "slug": "deckgl-screen-grid",
+    "url": "https://deck.gl/docs/api-reference/aggregation-layers/screen-grid-layer",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/deckgl-screen-grid.png",
+    "ok": true,
+    "title": "ScreenGridLayer | deck.gl",
+    "h1": "ScreenGridLayer"
+  },
+  {
+    "slug": "mapbox-cluster",
+    "url": "https://docs.mapbox.com/mapbox-gl-js/example/cluster/",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/mapbox-cluster.png",
+    "ok": true,
+    "title": "Create and style clusters | Mapbox GL JS | Mapbox",
+    "h1": "Create and style clusters"
+  },
+  {
+    "slug": "nsw-school-finder",
+    "url": "https://schoolfinder.education.nsw.gov.au/",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/nsw-school-finder.png",
+    "ok": true,
+    "title": "School Finder",
+    "h1": "Find a school"
+  },
+  {
+    "slug": "tea-school-district-locator",
+    "url": "https://tea.texas.gov/families-and-students/school-district-locator/school-district-locator",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/tea-school-district-locator.png",
+    "ok": true,
+    "title": "School District Locator | Texas Education Agency",
+    "h1": "School District Locator"
+  },
+  {
+    "slug": "mark-a-spot-amsterdam",
+    "url": "https://demo.mark-a-spot.com/amsterdam",
+    "file": "/home/openq/code/5060_book/docs/benchmarks/screenshots/mark-a-spot-amsterdam.png",
+    "ok": true,
+    "title": "Amsterdam",
+    "h1": "Amsterdam"
+  }
+]
