@@ -48,11 +48,15 @@ const ENV_REQUIREMENTS = [
   { key: "SOCIAL_WELFARE_DOCX", purpose: "사회복지시설 API 명세 확인", phase: "public-data", usage: "implemented" },
   { key: "SENIOR_WELFARE_PDF", purpose: "노인복지시설 파일데이터 원천", phase: "public-data", usage: "pending" },
   { key: "SENIOR_WELFARE_HWPX", purpose: "노인복지시설 파일데이터 원천", phase: "public-data", usage: "pending" },
-  { key: "SUPABASE_URL", purpose: "Supabase DB 접속 URL", phase: "database", usage: "pending" },
-  { key: "SUPABASE_ANON_KEY", purpose: "브라우저 read/RLS 검증용 anon key", phase: "database", usage: "pending" },
-  { key: "SUPABASE_SERVICE_ROLE_KEY", purpose: "서버/빌드 수집 데이터 upsert", phase: "database", usage: "pending" },
+  { key: "SUPABASE_URL", purpose: "Supabase DB 접속 URL", phase: "database", usage: "implemented" },
+  { key: "NEXT_PUBLIC_SUPABASE_URL", purpose: "Supabase 공개 read URL", phase: "database", usage: "pending" },
+  { key: "SUPABASE_ANON_KEY", purpose: "브라우저 read/RLS 검증용 anon key", phase: "database", usage: "implemented" },
+  { key: "NEXT_PUBLIC_SUPABASE_ANON_KEY", purpose: "브라우저 read/RLS 검증용 공개 anon key", phase: "database", usage: "pending" },
+  { key: "SUPABASE_SERVICE_ROLE_KEY", purpose: "서버/빌드 수집 데이터 upsert", phase: "database", usage: "implemented" },
   { key: "SUPABASE_ACCESS_TOKEN", purpose: "Supabase Management API 프로젝트 생성/키 조회용 PAT", phase: "database", usage: "implemented" },
-  { key: "SUPABASE_ORG_ID", purpose: "Supabase 프로젝트 생성 대상 조직 ID", phase: "database", usage: "pending" },
+  { key: "SUPABASE_ORG_ID", purpose: "Supabase 프로젝트 생성 대상 조직 ID", phase: "database", usage: "implemented" },
+  { key: "SUPABASE_PROJECT_REF", purpose: "Supabase 프로젝트 ref", phase: "database", usage: "implemented" },
+  { key: "SUPABASE_DB_PASSWORD", purpose: "Supabase 원격 DB migration용 비밀번호", phase: "database", usage: "implemented" },
   { key: "EMAIL_PROVIDER_API_KEY", purpose: "Resend/SendGrid/Mailgun/SES 등 발송 provider", phase: "email", usage: "pending" },
   { key: "LISTMONK_BASE_URL", purpose: "self-hosted listmonk API base URL", phase: "email", usage: "pending" },
   { key: "LISTMONK_API_TOKEN", purpose: "listmonk API token", phase: "email", usage: "pending" },
@@ -517,6 +521,36 @@ async function probeSupabaseManagement() {
   }
 }
 
+async function probeSupabaseRest() {
+  const url = process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) {
+    return safeStatus("Supabase DB REST", "failed", {
+      safeMessage: "SUPABASE_URL 또는 SERVICE_ROLE_KEY 없음",
+      operatorAction: "Supabase 프로젝트 생성 및 키 저장 후 재실행",
+    });
+  }
+  try {
+    const response = await fetch(`${url}/rest/v1/institutions?select=id`, {
+      method: "GET",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Prefer: "count=exact",
+        Range: "0-0",
+      },
+    });
+    if (!response.ok) throw new Error(String(response.status));
+    const total = Number(response.headers.get("content-range")?.split("/")?.[1] || 0);
+    return safeStatus("Supabase DB REST", "ok", { total, safeMessage: "institutions 테이블 조회 정상" });
+  } catch (error) {
+    return safeStatus("Supabase DB REST", "failed", {
+      safeMessage: "Supabase DB 조회 실패",
+      operatorAction: "schema 적용, RLS, service role key 확인",
+    });
+  }
+}
+
 async function main() {
   loadEnv();
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -612,6 +646,7 @@ async function main() {
   apiStatus.push(await probeKakao());
   apiStatus.push(await probeVWorld());
   apiStatus.push(await probeSupabaseManagement());
+  apiStatus.push(await probeSupabaseRest());
 
   const byKey = new Map();
   institutions.forEach((item) => {

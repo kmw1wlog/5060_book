@@ -31,8 +31,35 @@ npx playwright test tests/dashboard.spec.js --reporter=line
 - 공공데이터포털: 평생학습강좌, 평생교육시설
 - KEDI CSV: 평생교육기관 로컬 파일 데이터
 - Supabase Management API: PAT 인증 및 조직 수 확인
+- Supabase DB: institutions/contacts 스키마, RLS, 데이터 upsert, read-only anon 검증
 
 이메일 발송은 의도적으로 비활성화되어 있습니다. Supabase 프로젝트 생성은 접근 가능한 조직이 여러 개일 때 자동 진행하지 않고 `SUPABASE_ORG_ID`가 명시된 뒤 진행합니다.
+
+## Supabase DB
+
+현재 운영 DB 프로젝트:
+
+- organization: `kmwOrg`
+- project: `5060_book-prod`
+- project ref: `jgjgwlqfnhxqedpupxek`
+
+스키마는 `supabase/migrations/20260704010000_dashboard_schema.sql`에 있습니다.
+
+DB 동기화와 검증:
+
+```bash
+npm run db:sync
+npm run db:verify
+```
+
+검증 기준:
+
+- `institutions` 775건
+- `contacts` 775건
+- anon key 읽기 성공
+- anon key 쓰기 차단
+
+DB 비밀번호, service role key, PAT는 `.env`/`.env.local`에만 저장하며 커밋하지 않습니다.
 
 ## 검증
 

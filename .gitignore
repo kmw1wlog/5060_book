@@ -11,3 +11,4 @@ test-*.png
 /ChatGPT Image Jun 10, 2026, 02_59_*.png
 .vercel
 data/geocode-cache.json
+supabase/.temp/

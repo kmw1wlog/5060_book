@@ -28,6 +28,7 @@ test.describe("map-canvas institution dashboard", () => {
     await expect(page.locator("#apiStatusStrip")).toContainText("VWorld 노인복지시설 실데이터");
     await expect(page.locator("#apiStatusStrip")).toContainText("Kakao REST 좌표 보강");
     await expect(page.locator("#apiStatusStrip")).toContainText("Supabase Management API");
+    await expect(page.locator("#apiStatusStrip")).toContainText("Supabase DB REST");
     expect(vworldCount).toBeGreaterThan(300);
     expect(realCoordinateCount).toBeGreaterThan(700);
   });
