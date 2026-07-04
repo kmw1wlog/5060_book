@@ -73,6 +73,26 @@ test.describe("map-canvas institution dashboard", () => {
     await expect(page.locator("#globalEmailList .side-item")).toHaveCount(filteredCount > 180 ? 180 : filteredCount);
   });
 
+  test("region summary mode is separate from the live Kakao map", async ({ page }) => {
+    await page.setViewportSize({ width: 1448, height: 900 });
+    await openDashboard(page);
+    await page.waitForFunction(() => document.documentElement.dataset.kakaoMapReady === "true");
+
+    await page.getByRole("button", { name: "지역 요약" }).click();
+    await expect(page.locator(".map-canvas-panel")).toHaveAttribute("data-view-mode", "region");
+    await expect(page.locator("#regionSummaryPanel")).toBeVisible();
+    await expect(page.locator(".region-card")).toHaveCount(Object.keys(dashboardData.summary.regionCounts).length);
+    await expect(page.locator(".korea-canvas")).not.toBeVisible();
+    await expect(page.locator(".map-table-strip")).not.toBeVisible();
+    await expect(page.locator("#regionSummaryPanel")).toContainText("수집 필요");
+
+    await page.locator(".region-card", { hasText: "서울" }).getByRole("button", { name: "지도에서 보기" }).click();
+    await expect(page.locator(".map-canvas-panel")).toHaveAttribute("data-view-mode", "map");
+    await expect(page.locator("#regionSelect")).toHaveValue("서울");
+    await expect(page.locator("#mapResultLabel")).toContainText(/서울 전체 \d+개 기관/);
+    await expect(page.locator(".korea-canvas")).toBeVisible();
+  });
+
   test("map pin click opens an institution management summary", async ({ page }) => {
     await page.setViewportSize({ width: 1448, height: 900 });
     await openDashboard(page);

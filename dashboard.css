@@ -1140,8 +1140,31 @@ body.map-dashboard {
 
 .map-canvas-panel {
   display: grid;
-  grid-template-rows: auto minmax(330px, 1fr) 230px;
+  grid-template-rows: auto auto minmax(330px, 1fr) 230px;
   overflow: hidden;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.mode-tabs button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(16, 47, 39, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.9);
+  color: var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mode-tabs button.is-active {
+  border-color: var(--forest);
+  background: var(--forest);
+  color: var(--paper);
 }
 
 .map-toolbar {
@@ -1327,6 +1350,133 @@ body.map-dashboard {
   background: rgba(255, 253, 247, 0.72);
 }
 
+.region-summary-panel {
+  display: none;
+  min-height: 0;
+  overflow: auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border-top: 1px solid rgba(16, 47, 39, 0.12);
+  background:
+    radial-gradient(circle at 24% 22%, rgba(0, 82, 62, 0.12), transparent 20rem),
+    linear-gradient(135deg, rgba(255, 253, 247, 0.9), rgba(239, 243, 232, 0.78));
+}
+
+.map-canvas-panel[data-view-mode="region"] {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.map-canvas-panel[data-view-mode="region"] .korea-canvas,
+.map-canvas-panel[data-view-mode="region"] .map-table-strip {
+  display: none;
+}
+
+.map-canvas-panel[data-view-mode="region"] .region-summary-panel {
+  display: grid;
+}
+
+.region-summary-hero,
+.region-card {
+  min-width: 0;
+  border: 1px solid rgba(16, 47, 39, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 253, 247, 0.88);
+  box-shadow: 0 10px 22px rgba(33, 26, 16, 0.08);
+}
+
+.region-summary-hero {
+  grid-column: span 2;
+  padding: 18px;
+}
+
+.region-summary-hero h2 {
+  font-size: 30px;
+}
+
+.region-summary-hero p {
+  margin: 8px 0 0;
+  font-weight: 800;
+}
+
+.region-summary-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.region-summary-metrics span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 63, 49, 0.08);
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.region-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.region-card.is-selected {
+  border-color: rgba(0, 82, 62, 0.42);
+  background: rgba(0, 82, 62, 0.08);
+}
+
+.region-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.region-card-head strong {
+  color: var(--forest);
+  font-family: "Nanum Myeongjo", "Noto Serif KR", serif;
+  font-size: 24px;
+}
+
+.region-card-head span {
+  color: var(--bronze);
+  font-weight: 900;
+}
+
+.region-density-meter {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(16, 47, 39, 0.1);
+}
+
+.region-density-meter::before {
+  content: "";
+  display: block;
+  width: var(--density);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--forest), var(--gold));
+}
+
+.region-card p {
+  margin: 0;
+  color: rgba(16, 47, 39, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.region-card button {
+  min-height: 38px;
+  border: 1px solid rgba(16, 47, 39, 0.2);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--forest);
+  font-weight: 900;
+  cursor: pointer;
+}
+
 .map-table-strip table {
   min-width: 640px;
   font-size: 14px;
@@ -1475,7 +1625,11 @@ body.map-dashboard {
 
   .map-canvas-panel {
     margin: 12px 0;
-    grid-template-rows: auto 520px 260px;
+    grid-template-rows: auto auto 520px 260px;
+  }
+
+  .region-summary-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1503,6 +1657,19 @@ body.map-dashboard {
   }
 
   .map-canvas-panel {
-    grid-template-rows: auto 430px 240px;
+    grid-template-rows: auto auto 430px 240px;
+  }
+
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .region-summary-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .region-summary-hero {
+    grid-column: auto;
   }
 }

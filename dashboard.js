@@ -4,6 +4,7 @@ let apiStatus = [];
 let envStatus = [];
 let activeTarget = "all";
 let activeRegion = "all";
+let activeViewMode = "map";
 let selectedId = "";
 let kakaoMap = null;
 let kakaoClusterer = null;
@@ -19,6 +20,9 @@ const fitMap = qs("#fitMap");
 const exportCsv = qs("#exportCsv");
 const mapPins = qs("#mapPins");
 const kakaoMapLayer = qs("#kakaoMapLayer");
+const mapCanvasPanel = qs(".map-canvas-panel");
+const modeTabs = qs(".mode-tabs");
+const regionSummaryPanel = qs("#regionSummaryPanel");
 const mapResultLabel = qs("#mapResultLabel");
 const mapEngineStatus = qs("#mapEngineStatus");
 const totalInstitutionCount = qs("#totalInstitutionCount");
@@ -267,6 +271,90 @@ function renderMap(options = {}) {
   renderKakaoMarkers(visible, options);
 }
 
+function getRegionSummaryItems() {
+  const source = institutions.filter((institution) => activeTarget === "all" || institution.targetGroup === activeTarget);
+  const grouped = source.reduce((acc, institution) => {
+    const region = institution.sido || "미분류";
+    if (!acc[region]) {
+      acc[region] = {
+        region,
+        total: 0,
+        senior: 0,
+        church: 0,
+        library: 0,
+        lifelong: 0,
+        missingEmail: 0,
+        highPriority: 0,
+        scoreSum: 0,
+      };
+    }
+    const item = acc[region];
+    item.total += 1;
+    item[institution.targetGroup] = (item[institution.targetGroup] || 0) + 1;
+    item.highPriority += Number(institution.priorityScore) >= 80 ? 1 : 0;
+    item.scoreSum += Number(institution.priorityScore || 0);
+    const contact = contacts.find((entry) => entry.institutionId === institution.id);
+    if (!contact?.email) item.missingEmail += 1;
+    return acc;
+  }, {});
+  return Object.values(grouped).sort((a, b) => b.total - a.total || a.region.localeCompare(b.region, "ko"));
+}
+
+function renderRegionSummary() {
+  const items = getRegionSummaryItems();
+  const total = items.reduce((sum, item) => sum + item.total, 0);
+  const missingEmail = items.reduce((sum, item) => sum + item.missingEmail, 0);
+  const highPriority = items.reduce((sum, item) => sum + item.highPriority, 0);
+  const fragment = document.createDocumentFragment();
+
+  const hero = document.createElement("article");
+  hero.className = "region-summary-hero";
+  hero.append(createTextElement("p", "정적 지역 요약", "eyebrow"));
+  hero.append(createTextElement("h2", `${TARGET_LABELS[activeTarget]} ${total.toLocaleString("ko-KR")}개 기관`));
+  hero.append(createTextElement("p", "지도 이동 없이 권역별 밀도와 검수 필요량을 먼저 판단합니다."));
+  const heroMetrics = document.createElement("div");
+  heroMetrics.className = "region-summary-metrics";
+  heroMetrics.append(createTextElement("span", `권역 ${items.length}개`));
+  heroMetrics.append(createTextElement("span", `이메일 수집 ${missingEmail.toLocaleString("ko-KR")}개`));
+  heroMetrics.append(createTextElement("span", `고우선순위 ${highPriority.toLocaleString("ko-KR")}개`));
+  hero.append(heroMetrics);
+  fragment.append(hero);
+
+  items.forEach((item) => {
+    const card = document.createElement("article");
+    card.className = `region-card${item.region === activeRegion ? " is-selected" : ""}`;
+    const header = document.createElement("div");
+    header.className = "region-card-head";
+    header.append(createTextElement("strong", item.region));
+    header.append(createTextElement("span", `${item.total.toLocaleString("ko-KR")}개`));
+    const meter = document.createElement("div");
+    meter.className = "region-density-meter";
+    meter.style.setProperty("--density", `${Math.max(8, Math.round((item.total / Math.max(1, items[0]?.total || 1)) * 100))}%`);
+    const breakdown = document.createElement("p");
+    breakdown.textContent = `시니어 ${item.senior || 0} · 교회 ${item.church || 0} · 도서관 ${item.library || 0} · 평생교육 ${item.lifelong || 0}`;
+    const meta = document.createElement("p");
+    meta.textContent = `수집 필요 ${item.missingEmail.toLocaleString("ko-KR")} · 우선순위 80+ ${item.highPriority.toLocaleString("ko-KR")} · 평균 ${Math.round(item.scoreSum / item.total)}`;
+    const action = document.createElement("button");
+    action.type = "button";
+    action.dataset.regionMap = item.region;
+    action.textContent = "지도에서 보기";
+    card.append(header, meter, breakdown, meta, action);
+    fragment.append(card);
+  });
+
+  regionSummaryPanel.replaceChildren(fragment);
+}
+
+function setViewMode(mode, options = {}) {
+  activeViewMode = mode;
+  mapCanvasPanel.dataset.viewMode = mode;
+  modeTabs.querySelectorAll("[data-view-mode]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.viewMode === mode);
+  });
+  if (mode === "region") renderRegionSummary();
+  if (mode === "map" && options.fit === true) renderMap({ fit: true });
+}
+
 function clearKakaoMarkers() {
   if (kakaoClusterer) kakaoClusterer.clear();
   kakaoMarkers.forEach((marker) => marker.setMap(null));
@@ -494,6 +582,7 @@ function buildInstitutionCsv(items) {
 function renderAll(options = {}) {
   renderTypeToggles();
   renderMap(options);
+  renderRegionSummary();
   renderRows();
   renderGlobalEmailList();
   renderCampaign();
@@ -514,9 +603,23 @@ function bindEvents() {
     activeTarget = "all";
     activeRegion = "all";
     regionSelect.value = "all";
+    setViewMode("map");
     renderAll({ fit: true });
   });
   fitMap.addEventListener("click", () => renderMap({ fit: true }));
+  modeTabs.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-view-mode]");
+    if (!button) return;
+    setViewMode(button.dataset.viewMode);
+  });
+  regionSummaryPanel.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-region-map]");
+    if (!button) return;
+    activeRegion = button.dataset.regionMap;
+    regionSelect.value = activeRegion;
+    setViewMode("map");
+    renderAll({ fit: true });
+  });
   mapPins.addEventListener("click", (event) => {
     const button = event.target.closest("[data-id]");
     if (button) selectInstitution(button.dataset.id, "summary");
