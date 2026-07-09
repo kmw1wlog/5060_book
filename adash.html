@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Adash | 학원 모의고사 영업 대시보드</title>
+    <meta
+      name="description"
+      content="학원 위치, 연락처 검수, 모의고사 영업 단계, 주문 후속 관리를 한 화면에서 관리하는 Adash 대시보드"
+    />
+    <link rel="stylesheet" href="./adash.css" />
+  </head>
+  <body>
+    <header class="app-bar">
+      <a class="brand" href="./adash.html" aria-label="Adash 홈">
+        <span class="brand-mark">A</span>
+        <span>Adash</span>
+      </a>
+      <nav class="mode-switch" aria-label="대시보드 보기">
+        <button type="button" class="is-active" data-mode="region">지역 요약</button>
+        <button type="button" data-mode="map">실지도</button>
+        <button type="button" data-mode="review">목록·검수</button>
+        <button type="button" data-mode="orders">주문</button>
+      </nav>
+      <div class="top-actions">
+        <span id="mapHealth" class="health-pill">지도 대기</span>
+          <button type="button" id="downloadCsv" class="ghost-button">CSV</button>
+      </div>
+    </header>
+
+    <main class="dashboard-shell">
+      <section class="command-bar" aria-label="대시보드 필터">
+        <div class="filter-group">
+          <label>
+            <span>지역</span>
+            <select id="regionFilter">
+              <option value="all">전국</option>
+            </select>
+          </label>
+          <label>
+            <span>대상</span>
+            <select id="gradeFilter">
+              <option value="all">전체</option>
+              <option value="중등">중등</option>
+              <option value="고등">고등</option>
+              <option value="N수">N수</option>
+            </select>
+          </label>
+          <label>
+            <span>단계</span>
+            <select id="stageFilter">
+              <option value="all">전체</option>
+              <option value="needs_contact_review">미검수</option>
+              <option value="campaign_candidate">캠페인후보</option>
+              <option value="sample_sent">샘플발송</option>
+              <option value="quote_sent">견적</option>
+              <option value="ordered">주문완료</option>
+            </select>
+          </label>
+          <label class="search-box">
+            <span>검색</span>
+            <input id="searchInput" type="search" placeholder="학원명, 과정, 지역" />
+          </label>
+        </div>
+        <div class="kpi-strip" aria-label="핵심 지표">
+          <article><span>학원</span><strong id="kpiAcademies">0</strong></article>
+          <article><span>승인 이메일</span><strong id="kpiApprovedEmails">0</strong></article>
+          <article><span>캠페인 후보</span><strong id="kpiCampaignReady">0</strong></article>
+          <article><span>주문/견적</span><strong id="kpiOrderPipeline">0</strong></article>
+          <article><span>예상 매출</span><strong id="kpiRevenue">0원</strong></article>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="학원 영업 작업 영역">
+        <aside class="left-panel" aria-label="작업 큐">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">오늘 볼 큐</p>
+              <h2>연락·검수 우선순위</h2>
+            </div>
+            <span id="queueCount">0</span>
+          </div>
+          <div id="leadQueue" class="lead-queue"></div>
+        </aside>
+
+        <section class="main-stage" aria-label="대시보드 메인">
+          <section id="regionView" class="view-panel is-active" aria-label="지역 요약">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">지역 요약</p>
+                <h1>어느 학원권부터 모의고사를 제안할지 판단합니다</h1>
+              </div>
+              <button type="button" id="showAllOnMap" class="primary-button">지도에서 전체 보기</button>
+            </div>
+            <div id="regionGrid" class="region-grid"></div>
+          </section>
+
+          <section id="mapView" class="view-panel" aria-label="실지도">
+            <div class="map-toolbar">
+              <div>
+                <p class="eyebrow">실지도</p>
+                <h2 id="mapTitle">전국 학원 지도</h2>
+              </div>
+              <div class="map-buttons">
+                <button type="button" id="fitMap" class="ghost-button">지도에 맞추기</button>
+                <button type="button" id="resetMap" class="ghost-button">전국 보기</button>
+              </div>
+            </div>
+            <div class="map-layout">
+              <div class="map-frame">
+                <div id="kakaoMap" class="kakao-map" aria-label="Kakao 학원 지도"></div>
+                <div id="fallbackMap" class="fallback-map" aria-label="정적 학원 위치 점 지도"></div>
+              </div>
+              <div class="map-list">
+                <div class="mini-head">
+                  <strong id="mapListCount">0개 학원</strong>
+                  <span>선택하면 오른쪽 상세가 바뀝니다</span>
+                </div>
+                <div id="mapAcademyList" class="academy-list"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="reviewView" class="view-panel" aria-label="목록과 이메일 검수">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">목록·검수</p>
+                <h2>이메일, 홈페이지, 영업 단계를 표로 검수합니다</h2>
+              </div>
+              <div class="bulk-actions">
+                <button type="button" id="lockCampaign" class="ghost-button">발송 후보 잠금</button>
+                <button type="button" id="exportCampaign" class="ghost-button">후보 CSV</button>
+                <button type="button" id="exportReview" class="primary-button">검수 CSV</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>학원</th>
+                    <th>지역</th>
+                    <th>대상/과정</th>
+                    <th>규모</th>
+                    <th>연락처</th>
+                    <th>영업</th>
+                    <th>다음 액션</th>
+                  </tr>
+                </thead>
+                <tbody id="reviewRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="ordersView" class="view-panel" aria-label="주문 관리">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">주문</p>
+                <h2>발주 후 납품·결제·재구매를 끊어서 관리합니다</h2>
+              </div>
+              <span id="orderSummary" class="summary-pill">0건</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>주문번호</th>
+                    <th>학원</th>
+                    <th>상품</th>
+                    <th>부수</th>
+                    <th>금액</th>
+                    <th>주문 상태</th>
+                    <th>납품/시험</th>
+                  </tr>
+                </thead>
+                <tbody id="orderRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <aside class="detail-panel" aria-label="선택 학원 상세">
+          <div class="detail-tabs" role="tablist" aria-label="상세 탭">
+            <button type="button" class="is-active" data-detail-tab="summary">학원</button>
+            <button type="button" data-detail-tab="contact">연락처</button>
+            <button type="button" data-detail-tab="sales">영업</button>
+            <button type="button" data-detail-tab="order">주문</button>
+          </div>
+          <div class="detail-body">
+            <section class="detail-view is-active" data-detail-panel="summary">
+              <p class="eyebrow">선택 학원</p>
+              <h2 id="detailName">학원 선택 필요</h2>
+              <dl class="info-list">
+                <div><dt>지역</dt><dd id="detailRegion">-</dd></div>
+                <div><dt>대상</dt><dd id="detailGrade">-</dd></div>
+                <div><dt>과정</dt><dd id="detailCourse">-</dd></div>
+                <div><dt>규모</dt><dd id="detailScale">-</dd></div>
+                <div><dt>우선순위</dt><dd id="detailScore">-</dd></div>
+              </dl>
+              <p id="detailNotes" class="note"></p>
+            </section>
+
+            <section class="detail-view" data-detail-panel="contact">
+              <p class="eyebrow">연락처 검수</p>
+              <h2 id="contactStatus">-</h2>
+              <dl class="info-list">
+                <div><dt>전화</dt><dd id="detailPhone">-</dd></div>
+                <div><dt>홈페이지</dt><dd id="detailWebsite">-</dd></div>
+                <div><dt>이메일</dt><dd id="detailEmail">-</dd></div>
+                <div><dt>출처</dt><dd id="detailEmailSource">-</dd></div>
+              </dl>
+              <div class="action-grid">
+                <button type="button" data-email-status="승인">대표 채널 승인</button>
+                <button type="button" data-email-status="제외">제외</button>
+                <button type="button" data-email-status="수집필요">수집필요</button>
+              </div>
+              <div class="check-row">
+                <span>대표 채널 승인</span>
+                <span>출처 URL 필요</span>
+                <span>개인 이메일 제외</span>
+              </div>
+            </section>
+
+            <section class="detail-view" data-detail-panel="sales">
+              <p class="eyebrow">영업 상태</p>
+              <h2 id="detailLeadStage">-</h2>
+              <dl class="info-list">
+                <div><dt>담당자</dt><dd id="detailOwner">-</dd></div>
+                <div><dt>마지막 접촉</dt><dd id="detailLastContacted">-</dd></div>
+                <div><dt>다음 후속</dt><dd id="detailNextFollowup">-</dd></div>
+                <div><dt>다음 액션</dt><dd id="detailNextAction">-</dd></div>
+              </dl>
+              <div class="edit-block">
+                <label>
+                  <span>단계</span>
+                  <select id="detailStageSelect"></select>
+                </label>
+                <label>
+                  <span>담당자</span>
+                  <input id="detailOwnerInput" type="text" />
+                </label>
+                <label>
+                  <span>후속일</span>
+                  <input id="detailFollowupInput" type="date" />
+                </label>
+                <button type="button" id="saveSalesState" class="primary-button">영업 저장</button>
+              </div>
+            </section>
+
+            <section class="detail-view" data-detail-panel="order">
+              <p class="eyebrow">주문 가능성</p>
+              <h2 id="detailOrderStatus">-</h2>
+              <dl class="info-list">
+                <div><dt>예상 부수</dt><dd id="detailExpectedQty">-</dd></div>
+                <div><dt>예상 매출</dt><dd id="detailExpectedRevenue">-</dd></div>
+                <div><dt>주문 이력</dt><dd id="detailOrderHistory">-</dd></div>
+                <div><dt>재구매</dt><dd id="detailRenewal">-</dd></div>
+              </dl>
+              <div class="edit-block">
+                <label>
+                  <span>주문 상태</span>
+                  <select id="detailOrderStatusSelect">
+                    <option value="미주문">미주문</option>
+                    <option value="견적">견적</option>
+                    <option value="주문접수">주문접수</option>
+                    <option value="결제대기">결제대기</option>
+                    <option value="납품대기">납품대기</option>
+                    <option value="납품완료">납품완료</option>
+                    <option value="완료">완료</option>
+                    <option value="클레임">클레임</option>
+                  </select>
+                </label>
+                <label>
+                  <span>결제 상태</span>
+                  <select id="detailPaymentStatusSelect">
+                    <option value="미정">미정</option>
+                    <option value="결제대기">결제대기</option>
+                    <option value="결제확인">결제확인</option>
+                    <option value="환불">환불</option>
+                  </select>
+                </label>
+                <button type="button" id="createMockOrder" class="ghost-button">주문 생성</button>
+                <button type="button" id="saveOrderState" class="primary-button">주문 저장</button>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./data/adash-config.js"></script>
+    <script src="./adash.js"></script>
+  </body>
+</html>
